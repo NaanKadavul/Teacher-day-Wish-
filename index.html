@@ -1,0 +1,257 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Happy Teacher's Day ✨</title>
+  <meta name="description" content="Enter your name and get a personalized Teacher's Day wish." />
+  <style>
+    :root {
+      --bg1: #fff7ea;
+      --bg2: #ffe1ec;
+      --card: #ffffff;
+      --text: #232323;
+      --accent: #e95a5a;
+      --accent2: #f0a500;
+      --muted: #666;
+      --shadow: 0 10px 30px rgba(0,0,0,.12);
+      --radius: 20px;
+    }
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 20% -10%, var(--bg2), transparent),
+                  radial-gradient(1000px 700px at 120% 10%, var(--bg2), transparent),
+                  linear-gradient(135deg, var(--bg1), #f3fff6 70%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .card {
+      width: min(720px, 92vw);
+      background: var(--card);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: clamp(18px, 3vw, 28px);
+      position: relative;
+      overflow: hidden;
+    }
+    .badge {
+      display: inline-block;
+      background: #fff0f1;
+      color: #c02b2b;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-weight: 600;
+      font-size: 12px;
+      letter-spacing: .4px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 6px 0 8px;
+      font-size: clamp(26px, 4vw, 36px);
+      line-height: 1.15;
+    }
+    p { color: var(--muted); margin: 0 0 16px; }
+    .row { display: grid; gap: 12px; grid-template-columns: 1fr auto; align-items: center; }
+    input[type="text"] {
+      width: 100%;
+      font-size: 16px;
+      padding: 14px 16px;
+      border-radius: 12px;
+      border: 1px solid #e5e7eb;
+      outline: none;
+      transition: box-shadow .2s, border-color .2s;
+    }
+    input[type="text"]:focus { border-color: #c084fc; box-shadow: 0 0 0 4px #ede9fe; }
+    button {
+      appearance: none;
+      border: 0;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: white;
+      padding: 12px 18px;
+      font-weight: 700;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: transform .06s ease, filter .15s ease;
+      white-space: nowrap;
+    }
+    button:hover { filter: brightness(1.05); }
+    button:active { transform: translateY(1px); }
+    .divider { height: 1px; background: #f0f0f0; margin: 18px 0; }
+    .greet { display: none; text-align: center; }
+    .greet.show { display: block; animation: pop .5s ease both; }
+    @keyframes pop { from { opacity: 0; transform: scale(.98); } to { opacity: 1; transform: scale(1); } }
+    .greet h2 { font-size: clamp(28px, 5vw, 42px); margin: 0 0 10px; }
+    .quote { font-style: italic; color: var(--muted); margin: 8px 0 18px; }
+    .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .btn-outline {
+      background: white; color: #111827; border: 1px solid #e5e7eb; box-shadow: none;
+    }
+    .confetti { position: fixed; inset: 0; pointer-events: none; }
+    .tiny { color: #8a8a8a; font-size: 12px; margin-top: 10px; text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="confetti" class="confetti"></canvas>
+  <main class="card" id="app">
+    <div id="formView">
+      <span class="badge">Teacher's Day • 5 September</span>
+      <h1>Enter your name to send a wish 🎉</h1>
+      <p>Type your name below and get a personalized <strong>Happy Teacher's Day</strong> message you can share.</p>
+      <div class="row">
+        <input id="nameInput" type="text" placeholder="Your name (e.g., Aadhavan)" autocomplete="name" />
+        <button id="makeBtn" aria-label="Make my wish">Create Wish</button>
+      </div>
+      <div class="tiny">Tip: You can share a link like <code>?name=YourName</code> so it opens directly with the greeting.</div>
+      <div class="divider"></div>
+      <p style="margin:0">Made for students to appreciate their teachers with love and gratitude. 🌸</p>
+    </div>
+    <section id="greetView" class="greet" aria-live="polite" aria-atomic="true">
+      <h2 id="greetTitle">Happy Teacher's Day! 🌟</h2>
+      <p class="quote" id="greetLine"></p>
+      <div class="actions">
+        <button id="againBtn" class="btn-outline">Make another wish</button>
+        <button id="shareBtn" title="Copy shareable link">Copy Share Link</button>
+      </div>
+      <div class="tiny" id="copiedMsg" style="display:none;">Link copied! Share it with your teachers 💌</div>
+    </section>
+  </main>
+  <script>
+    (function() {
+      const $ = sel => document.querySelector(sel);
+      const formView = $('#formView');
+      const greetView = $('#greetView');
+      const nameInput = $('#nameInput');
+      const makeBtn = $('#makeBtn');
+      const againBtn = $('#againBtn');
+      const shareBtn = $('#shareBtn');
+      const greetTitle = $('#greetTitle');
+      const greetLine = $('#greetLine');
+      const copiedMsg = $('#copiedMsg');
+
+      const niceLines = [
+        "Your guidance lights our way to success.",
+        "For the wisdom you share and the patience you show—thank you.",
+        "You inspire, you mentor, you make us better every day.",
+        "Teaching is the art of awakening joy in learning—thank you!",
+        "Behind every student who believes is a teacher who believed first."
+      ];
+
+      function titleCase(s) {
+        return s.replace(/\s+/g, ' ').trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ');
+      }
+
+      function showGreeting(name) {
+        const clean = titleCase(name || 'Friend');
+        greetTitle.textContent = `Happy Teacher's Day, ${clean}! 🎓`;
+        greetLine.textContent = niceLines[Math.floor(Math.random() * niceLines.length)];
+        formView.style.display = 'none';
+        greetView.classList.add('show');
+        launchConfetti();
+      }
+
+      function showForm() {
+        greetView.classList.remove('show');
+        formView.style.display = 'block';
+        nameInput.focus();
+      }
+
+      makeBtn.addEventListener('click', () => {
+        const v = nameInput.value.trim();
+        if (!v) { nameInput.focus(); nameInput.setAttribute('aria-invalid','true'); return; }
+        nameInput.removeAttribute('aria-invalid');
+        const url = new URL(location.href);
+        url.searchParams.set('name', v);
+        history.replaceState(null, '', url.toString());
+        showGreeting(v);
+      });
+
+      nameInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') makeBtn.click();
+      });
+
+      againBtn.addEventListener('click', () => {
+        const url = new URL(location.href);
+        url.searchParams.delete('name');
+        history.replaceState(null, '', url.toString());
+        nameInput.value = '';
+        showForm();
+      });
+
+      shareBtn.addEventListener('click', async () => {
+        const url = new URL(location.href);
+        if (!url.searchParams.get('name')) {
+          const v = nameInput.value.trim();
+          if (v) url.searchParams.set('name', v);
+        }
+        const link = url.toString();
+        try {
+          await navigator.clipboard.writeText(link);
+          copiedMsg.style.display = 'block';
+          setTimeout(() => copiedMsg.style.display = 'none', 2000);
+        } catch (err) {
+          alert('Copy failed. Long-press/select the address bar to copy the link.');
+        }
+      });
+
+      const params = new URLSearchParams(location.search);
+      const preset = params.get('name');
+      if (preset) {
+        nameInput.value = preset;
+        showGreeting(preset);
+      }
+
+      const canvas = document.getElementById('confetti');
+      const ctx = canvas.getContext('2d');
+      let confettiBits = [];
+      function resize() {
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      }
+      window.addEventListener('resize', resize); resize();
+
+      function launchConfetti() {
+        confettiBits = Array.from({ length: 120 }, () => ({
+          x: Math.random() * canvas.width,
+          y: -10 - Math.random() * canvas.height * .3,
+          r: 4 + Math.random() * 6,
+          vy: 1 + Math.random() * 3,
+          vx: -1 + Math.random() * 2,
+          rot: Math.random() * Math.PI,
+          vr: -0.1 + Math.random() * 0.2,
+          s: Math.random() * 2 + 1
+        }));
+        animate();
+        setTimeout(() => confettiBits = [], 2500);
+      }
+
+      function animate() {
+        if (!confettiBits.length) return;
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        for (const p of confettiBits) {
+          p.x += p.vx; p.y += p.vy; p.rot += p.vr;
+          if (p.y > canvas.height + 20) p.y = -10;
+          drawRect(p.x, p.y, p.r, p.rot, p.s);
+        }
+        requestAnimationFrame(animate);
+      }
+
+      function drawRect(x, y, r, rot, s) {
+        ctx.save();
+        ctx.translate(x, y); ctx.rotate(rot);
+        ctx.scale(s, s);
+        ctx.fillStyle = randomColor();
+        ctx.fillRect(-r/2, -r/2, r, r);
+        ctx.restore();
+      }
+
+      function randomColor() {
+        const colors = ['#ef4444','#f59e0b','#10b981','#3b82f6','#a855f7','#ec4899'];
+        return colors[(Math.random() * colors.length) | 0];
+      }
+    })();
+  </script>
+</body>
+</html>
